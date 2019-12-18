@@ -1,7 +1,5 @@
 package com.sx.kotlinfirst.chapter9.behavior
 
-import kotlin.reflect.jvm.javaMethod
-
 /**
  * @author sunxin
  * @date 2019-12-18 13:22
@@ -15,9 +13,7 @@ import kotlin.reflect.jvm.javaMethod
 
 // 游泳运动员
 class Swimmer {
-    fun swim() {
-        println("I am swimming...")
-    }
+    fun swim() = println("I am swimming...")
 
     // shaw很快掌握了蛙泳，仰泳，自由泳等多种的泳姿，对swim方法进行改造
     // 这种设计不好，并不是所有的运动员都掌握这三种泳姿，违背了开闭原则
@@ -82,18 +78,22 @@ fun backstroke() = println("I am backstroke...")
 
 fun freestyle() = println("I am freestyle")
 
-class SwimmerB(private val swimming:()->Unit){
+class SwimmerB(private val swimming: () -> Unit) {
 
-    fun swim(){
+    fun swim() {
         swimming()
     }
 }
 
 
+fun isOdd(x: Int) = x % 2 != 0
+
 
 fun main() {
 //    val shaw = Swimmer()
 //    shaw.swim()
+    // :: converts a kotlin function into a lambda.
+    // 关于更多 :: 的用法，看文档 https://www.kotlincn.net/docs/reference/reflection.html
     val kFunction1 = Swimmer::swim
     // 策略设计模式
     // 比如，shaw周末想自由泳，工作日想仰泳
@@ -103,8 +103,13 @@ fun main() {
     weekdayShaw.swim()
 
     // 高阶函数再次改造
-    val weekShaw = SwimmerB(::breaststroke)
+    val kFunction0 = ::breaststroke
+    val weekShaw = SwimmerB(kFunction0)
     weekShaw.swim()
     val dayShaw = SwimmerB(::freestyle)
     dayShaw.swim()
+
+    val numbers = listOf(1,2,3)
+    val kFunction11 = ::isOdd
+    println(numbers.filter(::isOdd))
 }
