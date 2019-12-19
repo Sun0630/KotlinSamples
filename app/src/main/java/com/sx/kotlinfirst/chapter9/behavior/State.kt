@@ -18,7 +18,10 @@ package com.sx.kotlinfirst.chapter9.behavior
 // 饮水机
 class WaterMachine {
 
+    // 状态
     var state: WaterMachineState
+
+
     val off = Off(this)
     val heating = Heating(this)
     val cooling = Cooling(this)
@@ -28,7 +31,7 @@ class WaterMachine {
         state = off
     }
 
-
+    // 行为
     fun turnHeating() {
         this.state.turnHeating()
     }
