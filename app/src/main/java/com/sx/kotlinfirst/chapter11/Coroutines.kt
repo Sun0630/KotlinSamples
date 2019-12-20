@@ -1,6 +1,8 @@
 package com.sx.kotlinfirst.chapter11
 
+import android.graphics.DiscretePathEffect
 import kotlinx.coroutines.*
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.system.measureTimeMillis
 
 /**
@@ -10,7 +12,15 @@ import kotlin.system.measureTimeMillis
  */
 
 fun main1() {
-    // 在后台启动一个协程
+    // 创建协程的3中方法
+    // 方法一：使用runBlocking顶层函数
+    // 通常用于单元测试场景，不会用到业务开发当中，因为他是线程阻塞的
+    runBlocking {
+        // ....
+    }
+
+    // 方法二：在后台启动一个协程
+    // 不会阻塞线程，但是Android开发中不推荐，因为他的生命周期和App一致，且不能取消
     GlobalScope.launch {
         // 延迟1秒，挂起协程但是不会阻塞线程，所以在延迟1s之后先输出了 Hello ，后输出了 World
         // delay 只能用于协程内部，用于挂起协程，不会阻塞线程
@@ -19,13 +29,54 @@ fun main1() {
         println("World")
     }
 
+    // 方法三：自行通过 CoroutineContext 创建一个 CoroutineScope对象
+    // 推荐使用这种方法，
+    val context = EmptyCoroutineContext
+    val coroutineScope = CoroutineScope(context)
+    // 切换到IO线程
+    coroutineScope.launch(Dispatchers.IO) {
+        println("当前线程name：${Thread().name}")
+    }
+
+    // 实现：在子线程请求数据，切换到主线程更新UI
+    // 一般写法，不优雅，还是在嵌套
+    coroutineScope.launch(Dispatchers.IO){
+        // ... 子线程获取数据
+        launch(Dispatchers.Main){
+            // 切换到主线程更新UI
+        }
+    }
+
+    // 二般写法，使用 withContext函数。这个函数可以切换到指定的线程，并在闭包内的逻辑执行结束之后，自动把线程切换回去继续执行
+    coroutineScope.launch(Dispatchers.Main){
+        // 从UI线程开始
+        val image = withContext(Dispatchers.IO){
+            // 运行在IO线程获取图片，并在结束之后切回UI线程
+        }
+        // IO线程执行结束之后回到UI线程继续执行更新UI
+        // 这个方式的优势体现在频繁的进行线程切换，"自动切回来" 消除了并发代码在协作时的嵌套
+        // 把withContext放进一个单独的函数里面
+        getImage(1)
+    }
+
+
+
+
+
+
     // 协程被延迟了1s，但是主线程继续执行
     println("Hello")
     // 为了使JVM报货，阻塞主线程2s
     // 如果没有，那么程序智慧输出 Hello，因为主线程没有阻塞，程序回立即执行，不会等协程执行完之后执行
     Thread.sleep(2000L)
+
+
 }
 
+// 把withContext放进一个单独的函数里面
+suspend fun getImage(imageId: Int) = withContext(Dispatchers.IO){
+
+}
 
 /**
  * 1. launch 与 runBlocking
